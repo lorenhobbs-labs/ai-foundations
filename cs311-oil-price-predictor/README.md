@@ -1,3 +1,5 @@
+<div align="left">
+
 # CS311 Oil Price Predictor
 
 This folder contains my Study.com CS 311 Project #1 machine learning application for predicting Brent crude oil prices.
@@ -45,3 +47,6 @@ python oil_price_predictor.py
 ## Notes
 
 This is a course project, not a trading tool. The model uses historical price data to make a short-term prediction, but real oil prices can change because of supply, demand, geopolitical events, inventory reports, and other market conditions that are not fully captured by historical prices alone.
+
+
+</div>
