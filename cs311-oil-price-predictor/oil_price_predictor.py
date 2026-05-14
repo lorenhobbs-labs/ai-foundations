@@ -335,59 +335,144 @@ def save_cleaned_dataset(data, output_file="cleaned_brent_crude_oil_data.csv"):
     data.to_csv(output_file, index=False)
 
 
-def main():
+def run_full_workflow():
     """
-    Main program workflow.
+    Run the full oil price prediction workflow.
+
+    This keeps the machine learning process in one place so the menu can call it.
     """
 
-    # Print a simple header for the terminal output.
-    print("Oil Price Predictor")
-    print("Brent Crude Oil Futures Next-Day Closing Price Prediction")
-    print()
-
-    # Step 1: Download the raw historical Brent crude oil futures data.
+    # Download the Brent crude oil futures data.
     raw_data = download_oil_data()
 
-    # Step 2: Clean the data and create model features.
+    # Clean the data and create the model features.
     model_data = prepare_features(raw_data)
 
-    # Step 3: Save a copy of the cleaned dataset for review.
+    # Save the cleaned dataset so it can be reviewed later.
     save_cleaned_dataset(model_data)
 
-    # Step 4: Train the model and evaluate its performance.
+    # Train the model and calculate performance metrics.
     model, X_test, y_test, predictions, metrics, feature_columns = train_and_evaluate_model(model_data)
 
-    # Step 5: Predict the next trading day's Brent crude oil closing price.
+    # Predict the next trading day's Brent crude oil closing price.
     next_day_prediction = predict_next_day_price(model, model_data, feature_columns)
 
-    # Step 6: Save the actual vs. predicted plot.
+    # Save the actual vs. predicted chart.
     save_results_plot(model_data, y_test, predictions)
 
-    # Print dataset information for the report.
-    print("Dataset Information")
-    print(f"Rows used after preprocessing: {len(model_data)}")
-    print(f"Features used by model: {len(feature_columns)}")
+    # Return the important results so the menu can reuse them.
+    return {
+        "model_data": model_data,
+        "model": model,
+        "X_test": X_test,
+        "y_test": y_test,
+        "predictions": predictions,
+        "metrics": metrics,
+        "feature_columns": feature_columns,
+        "next_day_prediction": next_day_prediction,
+    }
+
+
+def print_menu():
+    """
+    Print the user menu.
+
+    This makes the program feel more like a small application instead of only
+    a script that runs once from top to bottom.
+    """
+
+    print()
+    print("Oil Price Predictor Menu")
+    print("1. Run full prediction workflow")
+    print("2. Show dataset information")
+    print("3. Show model performance")
+    print("4. Show next trading day prediction")
+    print("5. Exit")
     print()
 
-    # Print model performance metrics.
-    print("Model Performance")
-    print(f"Mean Absolute Error: ${metrics['MAE']:.2f}")
-    print(f"Root Mean Squared Error: ${metrics['RMSE']:.2f}")
-    print(f"R-squared Score: {metrics['R2']:.4f}")
-    print()
 
-    # Print the next-day prediction.
-    print("Next-Day Prediction")
-    print(f"Predicted next trading day closing price: ${next_day_prediction:.2f}")
-    print()
+def main():
+    """
+    Main program with a simple interactive menu.
+    """
 
-    # Tell the user which files were created.
-    print("Files Created")
-    print("cleaned_brent_crude_oil_data.csv")
-    print("actual_vs_predicted_brent_crude_oil.png")
+    print("Oil Price Predictor")
+    print("Brent Crude Oil Futures Next-Day Closing Price Prediction")
+
+    # Store workflow results after the model has been run.
+    # At the start, this is None because no model has been trained yet.
+    results = None
+
+    # Keep showing the menu until the user chooses to exit.
+    while True:
+        print_menu()
+
+        # Ask the user to choose a menu option.
+        choice = input("Enter your choice: ").strip()
+
+        if choice == "1":
+            print()
+            print("Running full prediction workflow...")
+
+            # Run the full machine learning workflow.
+            results = run_full_workflow()
+
+            print()
+            print("Workflow complete.")
+            print("Files Created")
+            print("cleaned_brent_crude_oil_data.csv")
+            print("actual_vs_predicted_brent_crude_oil.png")
+
+        elif choice == "2":
+            print()
+
+            # Make sure the workflow has been run before showing results.
+            if results is None:
+                print("Please run option 1 first so the dataset can be loaded and processed.")
+            else:
+                model_data = results["model_data"]
+                feature_columns = results["feature_columns"]
+
+                print("Dataset Information")
+                print(f"Rows used after preprocessing: {len(model_data)}")
+                print(f"Features used by model: {len(feature_columns)}")
+
+        elif choice == "3":
+            print()
+
+            # Make sure model metrics exist before printing them.
+            if results is None:
+                print("Please run option 1 first so the model can be trained.")
+            else:
+                metrics = results["metrics"]
+
+                print("Model Performance")
+                print(f"Mean Absolute Error: ${metrics['MAE']:.2f}")
+                print(f"Root Mean Squared Error: ${metrics['RMSE']:.2f}")
+                print(f"R-squared Score: {metrics['R2']:.4f}")
+
+        elif choice == "4":
+            print()
+
+            # Make sure the prediction exists before printing it.
+            if results is None:
+                print("Please run option 1 first so the next-day price can be predicted.")
+            else:
+                next_day_prediction = results["next_day_prediction"]
+
+                print("Next-Day Prediction")
+                print(f"Predicted next trading day closing price: ${next_day_prediction:.2f}")
+
+        elif choice == "5":
+            print()
+            print("Exiting Oil Price Predictor.")
+            break
+
+        else:
+            print()
+            print("Invalid choice. Please enter 1, 2, 3, 4, or 5.")
 
 
 # This makes sure main() runs only when this file is executed directly.
-# It also keeps the file easier to reuse later if the functions are imported elsewhere.
 if __name__ == "__main__":
     main()
